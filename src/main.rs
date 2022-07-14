@@ -31,10 +31,7 @@ fn main() {
     match &cli.command {
         Commands::Check(args) => {
             let config = config::parse_config(&args.config_path);
-            if config.is_none() {
-                exit(1)
-            }
-            check::check(&config.unwrap());
+            check::check(&config);
         }
     }
 }

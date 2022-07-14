@@ -4,5 +4,4 @@ confs:
       ~/.config/nvim/
     files:
       - "*"
-    exclude:
-      - ""
+    exclude: []

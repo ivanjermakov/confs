@@ -1,5 +1,4 @@
-use std::path::Path;
-use std::process::exit;
+use std::panic::set_hook;
 
 use clap::{Parser, Subcommand, ValueHint};
 
@@ -27,6 +26,12 @@ struct CheckArgs {
 }
 
 fn main() {
+    set_hook(Box::new(|info| {
+        if let Some(s) = info.payload().downcast_ref::<String>() {
+            println!("{}", s);
+        }
+    }));
+
     let cli = Cli::parse();
     match &cli.command {
         Commands::Check(args) => {

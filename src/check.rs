@@ -1,3 +1,5 @@
-pub fn check(config_path: &String) {
-    println!("Check: {}", config_path);
+use crate::config::Config;
+
+pub fn check(config: &Config) {
+    println!("Checking: {:?}", config);
 }

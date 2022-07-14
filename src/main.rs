@@ -1,6 +1,10 @@
-mod check;
+use std::path::Path;
+use std::process::exit;
 
 use clap::{Parser, Subcommand, ValueHint};
+
+mod check;
+mod config;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -26,7 +30,11 @@ fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Check(args) => {
-            check::check(&args.config_path);
+            let config = config::parse_config(&args.config_path);
+            if config.is_none() {
+                exit(1)
+            }
+            check::check(&config.unwrap());
         }
     }
 }

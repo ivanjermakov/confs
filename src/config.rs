@@ -1,6 +1,7 @@
 use std::fs::read_to_string;
 use std::path::Path;
 
+use log::debug;
 use yaml_rust::{Yaml, YamlLoader};
 
 #[derive(Debug)]
@@ -18,7 +19,7 @@ pub struct Item {
 }
 
 pub fn parse_config(path: &String) -> Config {
-    println!("Checking config {}", path);
+    debug!("Config check {}", path);
     let generic_error = "Config error";
 
     let content =
@@ -60,12 +61,11 @@ fn parse_item(pair: (&Yaml, &Yaml)) -> Item {
         .map(|it| it.as_str().expect(item_error).to_string())
         .collect();
 
-    let exclude: Vec<String> = pair.1["exclude"]
-        .as_vec()
-        .expect(item_error)
-        .iter()
-        .map(|it| it.as_str().expect(item_error).to_string())
-        .collect();
+    let exclude: Vec<String> = pair.1["exclude"].as_vec().map_or(vec![], |it| {
+        it.iter()
+            .map(|it| it.as_str().expect(item_error).to_string())
+            .collect()
+    });
 
     return Item {
         dir,

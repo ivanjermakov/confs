@@ -1,10 +1,9 @@
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 
-use colored::Colorize;
 use log::{debug, error, info, warn};
 
-use crate::config::Config;
+use crate::config::{Config, pretty_item};
 use crate::fs::{expand, matches};
 
 // TODO: exclude support
@@ -12,7 +11,7 @@ pub fn check(config: &Config) {
     debug!("{:?}", config);
     config.items.iter().for_each(|item| {
         if Path::new(&expand(&item.root)).exists() {
-            debug!("[{}] {} found", format!("{}", item.dir).green(), item.root);
+            debug!("{} {} found", pretty_item(item), item.root);
 
             item.files.iter().for_each(|f| {
                 let pattern = format!("{}{}", item.root, f);
@@ -20,15 +19,11 @@ pub fn check(config: &Config) {
 
                 let matches = files.len();
                 if matches == 0 {
-                    warn!(
-                        "[{}] {} -> no matches",
-                        format!("{}", item.dir).green(),
-                        pattern
-                    )
+                    warn!("{} {} -> no matches", pretty_item(item), pattern)
                 } else {
                     debug!(
-                        "[{}] {} -> {} match{} [{:?}]",
-                        format!("{}", item.dir).green(),
+                        "{} {} -> {} match{} [{:?}]",
+                        pretty_item(item),
                         pattern,
                         matches,
                         if matches == 1 { "" } else { "es" },
@@ -40,11 +35,7 @@ pub fn check(config: &Config) {
                 }
             })
         } else {
-            error!(
-                "[{}] {} -> root not found",
-                format!("{}", item.dir).green(),
-                item.root
-            )
+            error!("{} {} -> root not found", pretty_item(item), item.root)
         }
     });
     info!("Check completed");

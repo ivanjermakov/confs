@@ -6,7 +6,7 @@ use fs_extra::dir::CopyOptions;
 use log::{debug, info};
 
 use crate::command::check::check_fatal;
-use crate::config::Config;
+use crate::config::{pretty_item, Config};
 use crate::fs::{expand, item_matches};
 
 pub fn sync(config: &Config) {
@@ -23,12 +23,18 @@ pub fn sync(config: &Config) {
         let dest = root_path.join(&item.dir);
         create_dir_all(&dest).unwrap();
         matches.iter().for_each(|f| {
-            debug!("Comparing files: {:?} | {:?}", f, &dest);
+            debug!(
+                "{} Comparing files: {:?} | {:?}",
+                pretty_item(item),
+                f,
+                &dest
+            );
             debug!(
                 "\tDestination file {}found",
                 if dest.exists() { "" } else { "not " }
             );
-            info!("Copying file: {:?} -> {:?}", f, &dest);
+            // TODO: strip prefix
+            info!("{} Copying file: {:?} -> {:?}", pretty_item(item), f, &dest);
             let mut options = CopyOptions::new();
             options.overwrite = true;
             copy_items(&[f], &dest, &options).unwrap();

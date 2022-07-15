@@ -1,3 +1,4 @@
+use colored::{ColoredString, Colorize};
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -73,4 +74,8 @@ fn parse_item(pair: (&Yaml, &Yaml)) -> Item {
         files,
         exclude,
     };
+}
+
+pub fn pretty_item(item: &Item) -> ColoredString {
+    format!("[{}]", format!("{}", item.dir).green()).normal()
 }

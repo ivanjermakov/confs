@@ -7,7 +7,7 @@ confs:
     exclude: [ ]
   home:
     root:
-      ~/sd
+      ~/
     files:
       - .Xresources*
       - .bashrc

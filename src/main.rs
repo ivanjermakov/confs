@@ -6,7 +6,10 @@ use clap::{Parser, Subcommand};
 use log::{debug, error};
 use log::LevelFilter::{Info, Trace};
 
-mod check;
+use crate::command::check::check;
+use crate::command::sync::sync;
+
+mod command;
 mod config;
 mod fs;
 mod logger;
@@ -23,19 +26,50 @@ struct Cli {
 enum Commands {
     #[clap(about = "Check config validity")]
     Check(CheckArgs),
+    #[clap(about = "Sync files into local directory according to config")]
+    Sync(SyncArgs),
 }
 
 #[derive(Parser, Debug)]
 struct CheckArgs {
-    #[clap(short, long, value_parser, value_hint = clap::ValueHint::FilePath, default_value = "./confs.yml",
-    help = "Path to config")]
-    config_path: String,
     #[clap(
-    short,
-    long,
-    required = false,
-    takes_value = false,
-    help = "Detailed output"
+        short,
+        long,
+        value_parser,
+        value_hint = clap::ValueHint::FilePath,
+        default_value = "./confs.yml",
+        help = "Path to config"
+    )]
+    config_path: String,
+
+    #[clap(
+        short,
+        long,
+        required = false,
+        takes_value = false,
+        help = "Detailed output"
+    )]
+    verbose: bool,
+}
+
+#[derive(Parser, Debug)]
+struct SyncArgs {
+    #[clap(
+        short,
+        long,
+        value_parser,
+        value_hint = clap::ValueHint::FilePath,
+        default_value = "./confs.yml",
+        help = "Path to config"
+    )]
+    config_path: String,
+
+    #[clap(
+        short,
+        long,
+        required = false,
+        takes_value = false,
+        help = "Detailed output"
     )]
     verbose: bool,
 }
@@ -53,7 +87,13 @@ fn main() {
             logger::init(if args.verbose { Trace } else { Info }).unwrap();
             debug!("{:?}", args);
             let config = config::parse_config(&args.config_path);
-            check::check(&config);
+            check(&config);
+        }
+        Commands::Sync(args) => {
+            logger::init(if args.verbose { Trace } else { Info }).unwrap();
+            debug!("{:?}", args);
+            let config = config::parse_config(&args.config_path);
+            sync(&config);
         }
     }
 }

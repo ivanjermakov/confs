@@ -3,5 +3,5 @@ confs:
     root:
       ~/.config/nvim/
     files:
-      - "*"
+      - "**/*"
     exclude: []

@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 use log::{debug, error, info, warn};
 
-use crate::config::{Config, pretty_item};
+use crate::config::{pretty_item, Config};
 use crate::fs::{expand, matches};
 
 // TODO: exclude support

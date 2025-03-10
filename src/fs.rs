@@ -7,10 +7,7 @@ use crate::config::Item;
 
 pub fn expand(path: &String) -> String {
     let err = format!("Error expanding to full path: {}", path);
-    Path::new(&tilde(path).to_string())
-        .to_str()
-        .expect(&err)
-        .to_string()
+    Path::new(&tilde(path).to_string()).to_str().expect(&err).to_string()
 }
 
 pub fn matches(pattern: &String) -> Vec<PathBuf> {

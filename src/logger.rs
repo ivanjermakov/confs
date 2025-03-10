@@ -4,7 +4,9 @@ use log::{Level, LevelFilter, Metadata, Record, SetLoggerError};
 struct Logger;
 
 impl log::Log for Logger {
-    fn enabled(&self, _metadata: &Metadata) -> bool { true }
+    fn enabled(&self, _metadata: &Metadata) -> bool {
+        true
+    }
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {

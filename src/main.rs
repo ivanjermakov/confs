@@ -42,13 +42,7 @@ struct CheckArgs {
     )]
     config_path: String,
 
-    #[clap(
-        short,
-        long,
-        required = false,
-        takes_value = false,
-        help = "Detailed output"
-    )]
+    #[clap(short, long, required = false, takes_value = false, help = "Detailed output")]
     verbose: bool,
 }
 
@@ -64,13 +58,7 @@ struct SyncArgs {
     )]
     config_path: String,
 
-    #[clap(
-        short,
-        long,
-        required = false,
-        takes_value = false,
-        help = "Detailed output"
-    )]
+    #[clap(short, long, required = false, takes_value = false, help = "Detailed output")]
     verbose: bool,
 }
 

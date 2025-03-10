@@ -2,10 +2,10 @@ extern crate glob;
 
 use std::panic::set_hook;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
+use log::error;
 use log::LevelFilter::{Info, Trace};
-use log::{debug, error};
 
 use crate::command::check::check;
 use crate::command::sync::sync;
@@ -19,6 +19,27 @@ mod logger;
 #[clap(author, version, about, long_about = None)]
 #[clap(propagate_version = true)]
 struct Cli {
+    #[clap(
+        global = true,
+        short,
+        long,
+        value_parser,
+        value_hint = clap::ValueHint::FilePath,
+        default_value = "./confs.yml",
+        help = "Path to config"
+    )]
+    config_path: String,
+
+    #[clap(
+        global = true,
+        short,
+        long,
+        required = false,
+        takes_value = false,
+        help = "Detailed output"
+    )]
+    verbose: bool,
+
     #[clap(subcommand)]
     command: Commands,
 }
@@ -26,41 +47,9 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     #[clap(about = "Check config validity")]
-    Check(CheckArgs),
+    Check,
     #[clap(about = "Sync files into local directory according to config")]
-    Sync(SyncArgs),
-}
-
-#[derive(Parser, Debug)]
-struct CheckArgs {
-    #[clap(
-        short,
-        long,
-        value_parser,
-        value_hint = clap::ValueHint::FilePath,
-        default_value = "./confs.yml",
-        help = "Path to config"
-    )]
-    config_path: String,
-
-    #[clap(short, long, required = false, takes_value = false, help = "Detailed output")]
-    verbose: bool,
-}
-
-#[derive(Parser, Debug)]
-struct SyncArgs {
-    #[clap(
-        short,
-        long,
-        value_parser,
-        value_hint = clap::ValueHint::FilePath,
-        default_value = "./confs.yml",
-        help = "Path to config"
-    )]
-    config_path: String,
-
-    #[clap(short, long, required = false, takes_value = false, help = "Detailed output")]
-    verbose: bool,
+    Sync,
 }
 
 fn main() -> Result<()> {
@@ -71,19 +60,11 @@ fn main() -> Result<()> {
     }));
 
     let cli = Cli::parse();
+    logger::init(if cli.verbose { Trace } else { Info }).map_err(|e| anyhow!(e))?;
+    let config = config::parse_config(&cli.config_path)?;
     match &cli.command {
-        Commands::Check(args) => {
-            logger::init(if args.verbose { Trace } else { Info }).map_err(|e| anyhow!(e))?;
-            debug!("{:?}", args);
-            let config = config::parse_config(&args.config_path)?;
-            check(&config);
-        }
-        Commands::Sync(args) => {
-            logger::init(if args.verbose { Trace } else { Info }).map_err(|e| anyhow!(e))?;
-            debug!("{:?}", args);
-            let config = config::parse_config(&args.config_path)?;
-            sync(&config);
-        }
+        Commands::Check => check(&config),
+        Commands::Sync => sync(&config),
     };
 
     Ok(())

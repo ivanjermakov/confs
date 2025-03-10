@@ -1,4 +1,4 @@
-use std::fs::{copy, create_dir, create_dir_all};
+use std::fs::{copy, create_dir_all};
 use std::path::Path;
 
 use log::{debug, info, warn};
@@ -13,16 +13,19 @@ pub fn sync(config: &Config) {
 
     check_fatal(config).and_then(|_| create_dir_all(root_path)).unwrap();
 
-    config.items.iter().for_each(|item| {
+    for item in config.items.iter() {
         let item_root = expand(&item.root);
         let item_root_path = Path::new(&item_root);
         let matches = item_matches(item);
-        let dest_dir = root_path.join(&item.dir);
-        create_dir_all(&dest_dir).unwrap();
-        matches.iter().for_each(|f| {
+        let dest_dir = root_path.join(&item.name);
+
+        debug!("mkdir {dest_dir:?}");
+        let _ = create_dir_all(&dest_dir).inspect_err(|e| warn!("Mkdir error: {e} {dest_dir:?}"));
+
+        for f in matches.iter() {
             if !f.exists() {
                 debug!("Source file does not exist");
-                return;
+                break;
             }
 
             let dest = &dest_dir.join(f.strip_prefix(item_root_path).unwrap());
@@ -31,20 +34,21 @@ pub fn sync(config: &Config) {
             }
 
             if f.is_dir() {
-                info!("{} Creating dir: {:?}", pretty_item(item), dest);
-                match create_dir(dest) {
-                    Ok(_) => {}
-                    Err(e) => warn!("mkdir error: {e}"),
+                if !f.exists() {
+                    info!("{} Creating dir: {:?}", pretty_item(item), dest);
+                    debug!("mkdir {dest:?}");
+                    let _ = create_dir_all(dest).inspect_err(|e| warn!("Mkdir error: {e} {dest:?}"));
                 }
             } else {
                 info!("{} Copying file: {:?} -> {:?}", pretty_item(item), f, dest);
-                match copy(f, dest) {
-                    Ok(_) => {}
-                    Err(e) => warn!("copy error: {e}"),
-                }
+                let parent_dir = dest.parent().unwrap();
+                debug!("mkdir {parent_dir:?}");
+                let _ = create_dir_all(parent_dir).inspect_err(|e| warn!("Mkdir error: {e} {parent_dir:?}"));
+                let _ = copy(f, dest).inspect_err(|e| warn!("Copy error: {e}"));
+                debug!("cp {f:?} {dest:?}");
             }
             copy_count += 1;
-        })
-    });
+        }
+    }
     info!("Copied {} files across {} items", copy_count, config.items.len())
 }

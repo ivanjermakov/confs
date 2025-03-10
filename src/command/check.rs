@@ -14,7 +14,7 @@ pub fn check(config: &Config) {
             debug!("{} {} found", pretty_item(item), item.root);
 
             item.files.iter().for_each(|f| {
-                let pattern = format!("{}{}", item.root, f);
+                let pattern = item.join(f);
                 let files: Vec<PathBuf> = matches(&pattern);
 
                 let matches = files.len();

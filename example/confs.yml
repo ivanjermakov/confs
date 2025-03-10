@@ -4,14 +4,10 @@ confs:
       ~/.config/nvim/
     files:
       - "**/*"
-    exclude: [ ]
   home:
     root:
       ~/
     files:
-      - .Xresources*
-      - .bashrc
-      - .xprofile
       - .vimrc
       - sdlfksj
 

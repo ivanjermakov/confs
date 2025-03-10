@@ -13,10 +13,16 @@ pub struct Config {
 
 #[derive(Debug)]
 pub struct Item {
-    pub dir: String,
     pub root: String,
+    pub name: String,
     pub files: Vec<String>,
     pub exclude: Vec<String>,
+}
+
+impl Item {
+    pub fn join(&self, file_glob: &str) -> String {
+        format!("{}{}", self.root, file_glob)
+    }
 }
 
 pub fn parse_config(path: &String) -> Config {
@@ -45,9 +51,9 @@ pub fn parse_config(path: &String) -> Config {
 fn parse_item(pair: (&Yaml, &Yaml)) -> Item {
     let generic_error = "Config error: Error parsing item";
 
-    let dir = pair.0.as_str().expect(generic_error).to_string();
+    let name = pair.0.as_str().expect(generic_error).to_string();
 
-    let item_error = &format!("{} {}", generic_error, dir);
+    let item_error = &format!("{} {}", generic_error, name);
 
     let root = pair.1["root"].as_str().expect(item_error).to_string();
 
@@ -62,14 +68,14 @@ fn parse_item(pair: (&Yaml, &Yaml)) -> Item {
         it.iter().map(|it| it.as_str().expect(item_error).to_string()).collect()
     });
 
-    return Item {
-        dir,
+    Item {
+        name,
         root,
         files,
         exclude,
-    };
+    }
 }
 
 pub fn pretty_item(item: &Item) -> ColoredString {
-    format!("[{}]", format!("{}", item.dir).green()).normal()
+    format!("[{}]", format!("{}", item.name).green()).normal()
 }

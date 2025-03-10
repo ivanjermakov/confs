@@ -2,6 +2,7 @@ extern crate glob;
 
 use std::panic::set_hook;
 
+use anyhow::{anyhow, Context, Result};
 use clap::{Parser, Subcommand};
 use log::LevelFilter::{Info, Trace};
 use log::{debug, error};
@@ -62,7 +63,7 @@ struct SyncArgs {
     verbose: bool,
 }
 
-fn main() {
+fn main() -> Result<()> {
     set_hook(Box::new(|info| {
         if let Some(s) = info.payload().downcast_ref::<String>() {
             error!("{}", s);
@@ -72,16 +73,18 @@ fn main() {
     let cli = Cli::parse();
     match &cli.command {
         Commands::Check(args) => {
-            logger::init(if args.verbose { Trace } else { Info }).unwrap();
+            logger::init(if args.verbose { Trace } else { Info }).map_err(|e| anyhow!(e))?;
             debug!("{:?}", args);
-            let config = config::parse_config(&args.config_path);
+            let config = config::parse_config(&args.config_path)?;
             check(&config);
         }
         Commands::Sync(args) => {
-            logger::init(if args.verbose { Trace } else { Info }).unwrap();
+            logger::init(if args.verbose { Trace } else { Info }).map_err(|e| anyhow!(e))?;
             debug!("{:?}", args);
-            let config = config::parse_config(&args.config_path);
+            let config = config::parse_config(&args.config_path)?;
             sync(&config);
         }
-    }
+    };
+
+    Ok(())
 }

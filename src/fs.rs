@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use glob::glob;
-use log::debug;
+use log::{debug, warn};
 use shellexpand::tilde;
 
 use crate::config::Item;
@@ -12,10 +12,13 @@ pub fn expand(path: &str) -> String {
 
 pub fn matches(pattern: &str) -> Vec<PathBuf> {
     let pattern = expand(pattern);
-    let res = glob(&pattern)
-        .expect(&format!("Invalid pattern {}", pattern))
-        .map(|it| it.unwrap())
-        .collect();
+    let res = match glob(&pattern) {
+        Ok(res) => res.map(|it| it.unwrap()).collect(),
+        Err(_) => {
+            warn!("Invalid pattern {}", pattern);
+            vec![]
+        }
+    };
     debug!("Glob {pattern}: {res:?}");
     res
 }

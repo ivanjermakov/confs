@@ -1,3 +1,4 @@
+use anyhow::{Context, Error, Result};
 use colored::{ColoredString, Colorize};
 use std::fs::read_to_string;
 use std::path::Path;
@@ -25,55 +26,48 @@ impl Item {
     }
 }
 
-pub fn parse_config(path: &String) -> Config {
+pub fn parse_config(path: &String) -> Result<Config> {
     debug!("Config check {}", path);
-    let generic_error = "Config error";
-
-    let content = read_to_string(Path::new(path)).expect(&format!("Unable to read config: {}", path));
-
-    let yaml = YamlLoader::load_from_str(&content).expect(generic_error);
-
-    let config = yaml[0].as_hash().and_then(|it| it.iter().next()).expect(generic_error);
-
-    let root = config.0.as_str().expect(generic_error).to_string();
-
+    let content = read_to_string(Path::new(path)).context(format!("Read error: {}", path))?;
+    let yaml = YamlLoader::load_from_str(&content).context("Parse config")?;
+    let config = yaml[0]
+        .as_hash()
+        .and_then(|it| it.iter().next())
+        .context("Parse config")?;
+    let root = config.0.as_str().context("Parse root")?.to_string();
     let items: Vec<Item> = config
         .1
         .as_hash()
-        .expect(generic_error)
+        .context("Parse items")?
         .iter()
-        .map(|p| parse_item(p))
-        .collect();
-
-    Config { root, items }
+        .map(parse_item)
+        .collect::<Result<_, _>>()?;
+    Ok(Config { root, items })
 }
 
-fn parse_item(pair: (&Yaml, &Yaml)) -> Item {
-    let generic_error = "Config error: Error parsing item";
-
-    let name = pair.0.as_str().expect(generic_error).to_string();
-
-    let item_error = &format!("{} {}", generic_error, name);
-
-    let root = pair.1["root"].as_str().expect(item_error).to_string();
+fn parse_item(pair: (&Yaml, &Yaml)) -> Result<Item> {
+    let name = pair.0.as_str().context("Parse item")?.to_string();
+    let root = pair.1["root"].as_str().context("Parse item")?.to_string();
 
     let files: Vec<String> = pair.1["files"]
         .as_vec()
-        .expect(item_error)
+        .context("Parse files")?
         .iter()
-        .map(|it| it.as_str().expect(item_error).to_string())
-        .collect();
+        .map(|it| Ok(it.as_str().context("Parse file")?.to_string()))
+        .collect::<Result<Vec<_>, Error>>()?;
 
-    let exclude: Vec<String> = pair.1["exclude"].as_vec().map_or(vec![], |it| {
-        it.iter().map(|it| it.as_str().expect(item_error).to_string()).collect()
-    });
+    let exclude: Vec<String> = pair.1["exclude"].as_vec().map_or(Ok(vec![]), |it| {
+        it.iter()
+            .map(|it| Ok(it.as_str().context("Parse exclude item")?.to_string()))
+            .collect::<Result<Vec<_>, Error>>()
+    })?;
 
-    Item {
+    Ok(Item {
         name,
         root,
         files,
         exclude,
-    }
+    })
 }
 
 pub fn pretty_item(item: &Item) -> ColoredString {

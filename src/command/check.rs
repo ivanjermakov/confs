@@ -44,19 +44,14 @@ pub fn check(config: &Config) {
 // Fatal if:
 // 1. config.[item].root is not present
 pub fn check_fatal(config: &Config) -> Result<(), Error> {
-    config
-        .items
-        .iter()
-        .map(|item| {
-            if Path::new(&expand(&item.root)).exists() {
-                Ok(item)
-            } else {
-                Err(Error::new(
-                    ErrorKind::NotFound,
-                    format!("No such directory: {}", item.root),
-                ))
-            }
-        })
-        .map(|r| r.map(|_| ()))
-        .collect()
+    config.items.iter().try_for_each(|item| {
+        if Path::new(&expand(&item.root)).exists() {
+            Ok(())
+        } else {
+            Err(Error::new(
+                ErrorKind::NotFound,
+                format!("No such directory: {}", item.root),
+            ))
+        }
+    })
 }

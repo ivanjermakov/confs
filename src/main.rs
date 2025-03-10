@@ -3,8 +3,8 @@ extern crate glob;
 use std::panic::set_hook;
 
 use clap::{Parser, Subcommand};
-use log::{debug, error};
 use log::LevelFilter::{Info, Trace};
+use log::{debug, error};
 
 use crate::command::check::check;
 use crate::command::sync::sync;

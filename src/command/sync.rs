@@ -1,8 +1,6 @@
-use std::fs::create_dir_all;
+use std::fs::{copy, create_dir_all};
 use std::path::Path;
 
-use fs_extra::copy_items;
-use fs_extra::dir::CopyOptions;
 use log::{debug, info};
 
 use crate::command::check::check_fatal;
@@ -35,9 +33,7 @@ pub fn sync(config: &Config) {
             );
             // TODO: strip prefix
             info!("{} Copying file: {:?} -> {:?}", pretty_item(item), f, &dest);
-            let mut options = CopyOptions::new();
-            options.overwrite = true;
-            copy_items(&[f], &dest, &options).unwrap();
+            copy(f, &dest).unwrap();
             copy_count += 1;
         })
     });
